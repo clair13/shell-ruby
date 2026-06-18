@@ -3,6 +3,9 @@ loop do
   $stdout.flush
   command = gets
   command = command ? command.chomp : ""
+  if command == "exit"
+    break
+  end
   $stdout.puts("#{command}: command not found")
 end
 
