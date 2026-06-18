@@ -1,8 +1,9 @@
-# TODO: Uncomment the code below to pass the first stage
-$stdout.write("$ ")
+loop do
+  $stdout.write("$ ")
 
-command = gets
+  command = gets
 
-command = command ? command.chomp : ""
-$stdout.puts("#{command}: command not found")
+  command = command ? command.chomp : ""
+  $stdout.puts("#{command}: command not found")
+end
 
