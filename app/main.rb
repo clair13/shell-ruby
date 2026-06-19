@@ -5,7 +5,10 @@ loop do
   command = command ? command.chomp : ""
   if command == "exit"
     break
+  elsif command.start_with?("echo ")
+    $stdout.puts(command[5..])
+  else
+    $stdout.puts("#{command}: command not found")
   end
-  $stdout.puts("#{command}: command not found")
 end
 
