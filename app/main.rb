@@ -22,7 +22,7 @@ loop do
   command = parts[0]
   args = parts[1..]
 
-  builtins = ["echo", "exit", "type"]
+  builtins = ["echo", "exit", "type", "pwd"]
 
   case command
   when "echo"
@@ -30,6 +30,8 @@ loop do
 
   when "exit"
     exit(args[0].to_i)
+  when "pwd"
+    puts Dir.pwd
 
   when "type"
     target = args[0]
