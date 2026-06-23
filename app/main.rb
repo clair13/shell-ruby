@@ -37,9 +37,9 @@ loop do
   when "cd"
     directory = args[0]
 
-    if Dir.exist?(directory)
+    begin
       Dir.chdir(directory)
-    else
+    rescue Errno::ENOENT
       puts "cd: #{directory}: No such file or directory"
     end
 
