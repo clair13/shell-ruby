@@ -22,7 +22,7 @@ loop do
   command = parts[0]
   args = parts[1..]
 
-  builtins = ["echo", "exit", "type", "pwd"]
+  builtins = ["echo", "exit", "type", "pwd", "cd"]
 
   case command
   when "echo"
@@ -30,8 +30,18 @@ loop do
 
   when "exit"
     exit(args[0].to_i)
+
   when "pwd"
     puts Dir.pwd
+
+  when "cd"
+    directory = args[0]
+
+    if Dir.exist?(directory)
+      Dir.chdir(directory)
+    else
+      puts "cd: #{directory}: No such file or directory"
+    end
 
   when "type"
     target = args[0]
