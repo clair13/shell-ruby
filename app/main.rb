@@ -1,19 +1,30 @@
+def find_executable(command)
+  ENV["PATH"].split(File::PATH_SEPARATOR).each do |dir|
+    path = File.join(dir, command)
+
+    return path if File.file?(path) && File.executable?(path)
+  end
+
+  nil
+end
+
+
 loop do
   $stdout.write("$ ")
   $stdout.flush
-  command = gets
+  input = gets
 
-  break if command.nil?
+  break if input.nil?
 
-  parts = command.strip.split
+  parts = input.chomp.split
   next if parts.empty?
 
-  order = parts[0]
+  command = parts[0]
   args = parts[1..]
 
   builtins = ["echo", "exit", "type"]
 
-  case order
+  case command
   when "echo"
     puts args.join(" ")
 
@@ -26,26 +37,23 @@ loop do
     if builtins.include?(target)
       puts "#{target} is a shell builtin"
     else
-      found = nil
+      path = find_executable(target)
 
-      ENV["PATH"].split(File::PATH_SEPARATOR).each do |dir|
-        path = File.join(dir, target)
-
-        if File.file?(path) && File.executable?(path)
-          found = path
-          break
-        end
-      end
-
-      if found
-        puts "#{target} is #{found}"
+      if path 
+        puts "#{target} is #{path}"
       else
         puts "#{target}: not found"
       end
     end
 
   else
-    puts "#{order}: not found"
+    path = find_executable(command)
+
+    if path
+      system([path, command], *args)
+    else
+      puts "#{command}: not found"
+    end
   end
 end
 
