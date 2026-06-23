@@ -26,7 +26,22 @@ loop do
     if builtins.include?(target)
       puts "#{target} is a shell builtin"
     else
-      puts "#{target}: not found"
+      found = nil
+
+      ENV["PATH"].split(File::PATH_SEPARATOR).each do |dir|
+        path = File.join(dir, target)
+
+        if File.file?(path) && File.executable?(path)
+          found = path
+          break
+        end
+      end
+
+      if found
+        puts "#{target} is #{found}"
+      else
+        puts "#{target}: not found"
+      end
     end
 
   else
