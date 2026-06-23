@@ -37,6 +37,8 @@ loop do
   when "cd"
     directory = args[0]
 
+    directory = ENV["HOME"] if directory == "~"
+
     begin
       Dir.chdir(directory)
     rescue Errno::ENOENT
