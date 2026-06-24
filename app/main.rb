@@ -1,3 +1,30 @@
+def parse_input(line)
+  args = []
+  current = ""
+  in_single_quote = false
+
+  i = 0
+  while i < line.length
+    char = line[i]
+
+    if char == "'"
+      in_single_quote = !in_single_quote
+    elsif char == " " && !in_single_quote
+      unless current.empty?
+        args << current
+        current = ""
+      end
+    else
+      current << char
+    end
+
+    i +=1
+  end
+
+  args << current unless current.empty?
+  args
+end
+
 def find_executable(command)
   ENV["PATH"].split(File::PATH_SEPARATOR).each do |dir|
     path = File.join(dir, command)
@@ -16,7 +43,7 @@ loop do
 
   break if input.nil?
 
-  parts = input.chomp.split
+  parts = parse_input(input.chomp)
   next if parts.empty?
 
   command = parts[0]
