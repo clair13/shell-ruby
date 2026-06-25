@@ -1,24 +1,39 @@
 def parse_input(line)
   args = []
   current = ""
-  in_single_quote = false
 
-  i = 0
-  while i < line.length
-    char = line[i]
+  in_single = false
+  in_double = false
 
-    if char == "'"
-      in_single_quote = !in_single_quote
-    elsif char == " " && !in_single_quote
-      unless current.empty?
-        args << current
-        current = ""
+  line.each_char do |char|
+    case char
+    when "'"
+      if in_double
+        current << char
+      else
+        in_single = !in_single
       end
+
+    when '"'
+      if in_single
+        current << char
+      else
+        in_double = !in_double
+      end
+
+    when " ", "\t"
+      if in_single || in_double
+        current << char
+      else
+        unless current.empty?
+          args << current
+          current = ""
+        end
+      end
+
     else
       current << char
     end
-
-    i +=1
   end
 
   args << current unless current.empty?
