@@ -9,9 +9,32 @@ def parse_input(line)
   while i < line.length
     char = line[i]
 
-    if !in_single && !in_double && char == "\\"
-      i += 1
-      current << line[i] if i < line.length
+    if char == "\\"
+      if in_single
+        # Backslash has no special meaning in single quotes.
+        current << "\\"
+
+      elsif in_double
+        # Inside double quotes, only \" and \\ are special.
+        if i + 1 < line.length
+          next_char = line[i + 1]
+
+          if next_char == '"' || next_char == "\\"
+            current << next_char
+            i += 1
+          else
+            # Keep the backslash literally.
+            current << "\\"
+          end
+        else
+          current << "\\"
+        end
+
+      else
+        # Outside quotes, backslash escapes the next character.
+        i += 1
+        current << line[i] if i < line.length
+      end
 
     elsif char == "'" && !in_double
       in_single = !in_single
