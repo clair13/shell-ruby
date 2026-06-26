@@ -69,6 +69,13 @@ def find_executable(command)
   nil
 end
 
+def with_output(redirect)
+  output = redirect ? File.open(redirect, "w") : $stdout
+  yield output
+ensure
+  output.close if redirect && output
+end
+
 
 loop do
   $stdout.write("$ ")
@@ -80,6 +87,13 @@ loop do
   parts = parse_input(input.chomp)
   next if parts.empty?
 
+  redirect = nil
+
+  if (idx = parts.index(">")) || (idx = parts.index("1>"))
+    redirect = parts[idx + 1]
+    parts = parts[0...idx]
+  end
+
   command = parts[0]
   args = parts[1..]
 
@@ -87,13 +101,17 @@ loop do
 
   case command
   when "echo"
-    puts args.join(" ")
+    with_output(redirect) do |out| 
+      out.puts args.join(" ")
+    end
 
   when "exit"
     exit(args[0].to_i)
 
   when "pwd"
-    puts Dir.pwd
+    with_output(redirect) do |out|
+      out.puts Dir.pwd
+    end
 
   when "cd"
     directory = args[0]
@@ -108,27 +126,32 @@ loop do
 
   when "type"
     target = args[0]
-
-    if builtins.include?(target)
-      puts "#{target} is a shell builtin"
-    else
-      path = find_executable(target)
-
-      if path 
-        puts "#{target} is #{path}"
+    with_output(redirect) do |out|
+      if builtins.include?(target)
+        out.puts "#{target} is a shell builtin"
       else
-        puts "#{target}: not found"
+        path = find_executable(target)
+
+        if path 
+          out.puts "#{target} is #{path}"
+        else
+          out.puts "#{target}: not found"
+        end
       end
     end
 
-  else
-    path = find_executable(command)
-
-    if path
-      system([path, command], *args)
     else
-      puts "#{command}: not found"
+      path = find_executable(command)
+
+      if path
+        if redirect
+          system([path, command], *args, out: redirect)
+        else
+          system([path, command], *args)
+        end
+      else
+        puts "#{command}: not found"
+      end
     end
   end
-end
 
