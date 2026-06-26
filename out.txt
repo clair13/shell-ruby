@@ -1,0 +1,8 @@
+Gemfile
+Gemfile.lock
+README.md
+app
+codecrafters.yml
+out.txt
+test.txt
+your_program.sh

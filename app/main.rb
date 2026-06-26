@@ -5,6 +5,8 @@ def parse_input(line)
   in_single = false
   in_double = false
 
+
+
   i = 0
   while i < line.length
     char = line[i]
@@ -69,11 +71,11 @@ def find_executable(command)
   nil
 end
 
-def with_output(redirect)
-  output = redirect ? File.open(redirect, "w") : $stdout
-  yield output
+def with_stream(default_stream, redirect)
+  stream = redirect ? File.open(redirect, "w") : default_stream
+  yield stream
 ensure
-  output.close if redirect && output
+  stream.close if redirect && stream
 end
 
 
@@ -87,12 +89,23 @@ loop do
   parts = parse_input(input.chomp)
   next if parts.empty?
 
-  redirect = nil
+  stdout_redirect = nil
+  stderr_redirect = nil
 
-  if (idx = parts.index(">")) || (idx = parts.index("1>"))
-    redirect = parts[idx + 1]
-    parts = parts[0...idx]
+  i = 0
+  while i < parts.length
+    case parts[i]
+    when ">", "1>"
+      stdout_redirect = parts[i + 1]
+      parts.slice!(i, 2)
+    when "2>"
+      stderr_redirect = parts[i + 1]
+      parts.slice!(i, 2)
+    else
+      i += 1
+    end
   end
+
 
   command = parts[0]
   args = parts[1..]
@@ -101,7 +114,7 @@ loop do
 
   case command
   when "echo"
-    with_output(redirect) do |out| 
+    with_stream($stdout, stdout_redirect) do |out| 
       out.puts args.join(" ")
     end
 
@@ -109,7 +122,7 @@ loop do
     exit(args[0].to_i)
 
   when "pwd"
-    with_output(redirect) do |out|
+    with_stream($stdout, stdout_redirect) do |out|
       out.puts Dir.pwd
     end
 
@@ -121,12 +134,14 @@ loop do
     begin
       Dir.chdir(directory)
     rescue Errno::ENOENT
-      puts "cd: #{directory}: No such file or directory"
+      with_stream($stderr, stderr_redirect) do |err|
+        err.puts "cd: #{directory}: No such file or directory"
+      end
     end
 
   when "type"
     target = args[0]
-    with_output(redirect) do |out|
+    with_stream($stdout, stdout_redirect) do |out|
       if builtins.include?(target)
         out.puts "#{target} is a shell builtin"
       else
@@ -144,14 +159,16 @@ loop do
       path = find_executable(command)
 
       if path
-        if redirect
-          system([path, command], *args, out: redirect)
-        else
-          system([path, command], *args)
-        end
+        options = {}
+
+        options[:out] = stdout_redirect if stdout_redirect
+        options[:err] = stderr_redirect if stderr_redirect
+
+        system([path, command], *args, **options)
       else
         puts "#{command}: not found"
       end
     end
   end
 
+puts "DEBUG: cmd=#{command}, args=#{args}, out=#{stdout_redirect}, err=#{stderr_redirect}"
