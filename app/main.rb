@@ -5,35 +5,31 @@ def parse_input(line)
   in_single = false
   in_double = false
 
-  line.each_char do |char|
-    case char
-    when "'"
-      if in_double
-        current << char
-      else
-        in_single = !in_single
-      end
+  i = 0
+  while i < line.length
+    char = line[i]
 
-    when '"'
-      if in_single
-        current << char
-      else
-        in_double = !in_double
-      end
+    if !in_single && !in_double && char == "\\"
+      i += 1
+      current << line[i] if i < line.length
 
-    when " ", "\t"
-      if in_single || in_double
-        current << char
-      else
-        unless current.empty?
-          args << current
-          current = ""
-        end
+    elsif char == "'" && !in_double
+      in_single = !in_single
+
+    elsif char == '"' && !in_single
+      in_double = !in_double
+
+    elsif (char == " " || char == "\t") && !in_single && !in_double
+      unless current.empty?
+        args << current
+        current = ""
       end
 
     else
       current << char
     end
+
+    i += 1
   end
 
   args << current unless current.empty?
